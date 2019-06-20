@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "baseUrl": "",
+    "outDir": "dist",
+    "lib": [
+      "es2017.object",
+      "es2015.promise",
+      "es5",
+      "dom"
+    ],
+    "module": "commonjs",
+    "sourceMap": true,
+    "target": "es5",
+    "paths": {
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

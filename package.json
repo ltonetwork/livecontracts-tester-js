@@ -1,0 +1,27 @@
+{
+  "name": "livecontracts-tester-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "lctest": ""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "@types/node": "^12.0.2",
+    "assert": "^2.0.0",
+    "cucumber": "^5.1.0",
+    "fs": "0.0.1-security",
+    "json": "^9.0.6",
+    "lto-api": "^0.5.11",
+    "mongodb": "^3.2.7",
+    "request": "^2.88.0",
+    "require": "^2.4.20",
+    "typescript": "^3.4.5",
+    "yaml": "^1.5.1"
+  }
+}
