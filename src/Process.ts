@@ -9,7 +9,7 @@ export class Process {
   protected chain: EventChain;
   protected projection: any;
   protected eventAtProjection: string;
-  protected creator: Account;
+  protected creator: Account = null;
   protected started = false;
 
   constructor(chain: EventChain, ref: string = null) {
@@ -26,7 +26,7 @@ export class Process {
   }
 
   public setCreator(account: Account): void {
-    if (this.creator && this.creator.getPublicSignKey() === account.getPublicSignKey()) {
+    if (this.creator !== null && this.creator.getPublicSignKey() === account.getPublicSignKey()) {
       return;
     }
 
@@ -72,7 +72,7 @@ export class Process {
 
   public createResponse(actionKey: string, key: string = null, data: object = {}): any {
     if (!key) {
-      key = this.scenario.actions.actionKey.default_response || 'ok';
+      key = this.scenario.actions[actionKey]['default_response'] || 'ok';
     }
 
     let response = {

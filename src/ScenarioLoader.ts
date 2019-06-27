@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import YAML from 'yaml';
-import JSON from 'json';
+const YAML = require('js-yaml');
+const JSON = require('json');
 
 export class ScenarioLoader {
   protected static SCENARIO_FILES = [
@@ -19,9 +19,9 @@ export class ScenarioLoader {
 
   protected static findScenarioFile(name: string, path: string): string {
     let file;
-    for (let ext in ScenarioLoader.SCENARIO_FILES) {
-      file = `${path}/${name}${ext}`;
-      if (fs.statSync(file)) {
+    for (let ext of ScenarioLoader.SCENARIO_FILES) {
+      file = `${path}/../../scenarios/${name}${ext}`;
+      if (fs.existsSync(file)) {
         return file;
       }
     }
@@ -43,7 +43,7 @@ export class ScenarioLoader {
 
   protected static parseYamlScenario(fileName: string): any {
     const file = fs.readFileSync(fileName);
-    let scenario = YAML.parse(file)
+    let scenario = YAML.safeLoad(file)
     if (!scenario) {
       throw new Error(`Unable to load scenario: failed to parse ${file}`);
     }

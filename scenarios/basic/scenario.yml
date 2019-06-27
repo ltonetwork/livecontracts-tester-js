@@ -1,0 +1,25 @@
+$schema: https://specs.livecontracts.io/v0.2.0/scenario/schema.json#
+title: Basic user
+
+actors:
+  user:
+    title: User
+
+actions:
+  complete:
+    $schema: https://specs.livecontracts.io/v0.2.0/action/schema.json#
+    title: Complete the process
+    actor: user
+    responses:
+      ok:
+      cancel:
+
+states:
+  :initial:
+    action: complete
+    transitions:
+      - response: ok
+        transition: :success
+      - response: cancel
+        transition: :failed
+

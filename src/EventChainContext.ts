@@ -1,12 +1,12 @@
-import { strict as request } from 'request';
 import { Before, Given, When, Then } from 'cucumber';
 import { strict as assert } from 'assert';
 import { LTO, Account, Event } from 'lto-api';
 import { EventChain } from './EventChain';
+const request = require('request');
 
 export class EventChainContext {
   private lto: LTO = new LTO();
-  protected accounts: Account[];
+  protected accounts: Account[] = [];
   protected creator: Account;
   protected chain: EventChain = new EventChain();
   protected systemSignKey: string;
@@ -28,7 +28,7 @@ export class EventChainContext {
   public getAccount(accountRef: string): Account {
     if (!this.accounts[accountRef]) {
       let account = this.lto.createAccountFromExistingPhrase(accountRef);
-      if (this.chain) {
+      if (this.chain.id) {
         account['id'] = this.chain.createProjectionId(accountRef);
 
         let identity = this.createIdentity(account);
@@ -79,12 +79,12 @@ export class EventChainContext {
 
   public submit(account: Account = null) {
     account = account ? account : this.creator;
-    let data = {
+    let data = JSON.stringify({
       'json': this.getChain(),
       'account': account
-    }
+    })
 
-    request({uri: 'event-chains', body: data, method: 'POST'}, (error, resp, body) => {
+    request({uri: 'http://localhost/event-chains', body: data, method: 'POST'}, (error, resp, body) => {
       if (error) {
         throw new Error('Failed to update chain');
       }

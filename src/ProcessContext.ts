@@ -1,13 +1,13 @@
 import { Account, Event } from 'lto-api';
 import { strict as request } from 'request';
-import { strict as assert } from 'assert';
 import { Process } from './Process';
 import { EventChainContext } from './EventChainContext';
+const assert = require('assert').ok;
 
 export class ProcessContext {
   protected chainContext: EventChainContext;
-  protected basePath: string;
-  protected processes: Process[];
+  protected basePath: string = __dirname;
+  protected processes: Process[] = [];
 
   constructor(chainContext: EventChainContext) {
     this.chainContext = chainContext;
