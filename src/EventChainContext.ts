@@ -1,27 +1,34 @@
-import { Before, Given, When, Then } from 'cucumber';
-import { strict as assert } from 'assert';
 import { LTO, Account, Event } from 'lto-api';
 import { EventChain } from './EventChain';
-const request = require('request');
+import { HTTPContext } from './HTTPContext';
+const assert = require('assert').ok;
+const fail = require('assert').fail;
 
 export class EventChainContext {
   private lto: LTO = new LTO();
+  protected httpContext: HTTPContext;
   protected accounts: Account[] = [];
   protected creator: Account;
   protected chain: EventChain = new EventChain();
   protected systemSignKey: string;
+
+  constructor(scope: any) {
+    this.httpContext = scope.httpContext;
+  }
 
   public fetchSystemKey(): void {
     let headers = {
       'Accept': 'Application/json'
     };
 
-    request({headers: headers, uri: '/', method: 'GET'}, (error, resp, body) => {
-      if (error) {
-        throw new Error('Failed to fetch systemkey');
-      }
-
+    this.httpContext.request('', 'GET', headers=headers)
+    .then((body: any) => {
       this.systemSignKey = body.services.events.signkey ? body.services.events.signkey : null;
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
     });
   }
 
@@ -67,13 +74,16 @@ export class EventChainContext {
     }
     let chainId = this.getChain().id;
 
-    request({headers: headers, uri: `event-chains/${chainId}`, body: data, method: 'GET'}, (error, resp, body) => {
-      if (error) {
-        throw new Error(`Can not find chain with chain id: ${chainId}`);
-      }
+    this.httpContext.request(`event-chains/${chainId}/`, 'GET', headers, data)
+    .then((body: any) => {
       let chain = this.getChain();
       chain.update(body);
       chain.linkIdentities(this.accounts);
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
     });
   }
 
@@ -84,13 +94,15 @@ export class EventChainContext {
       'account': account
     })
 
-    request({uri: 'http://localhost/event-chains', body: data, method: 'POST'}, (error, resp, body) => {
-      if (error) {
-        throw new Error('Failed to update chain');
-      }
+    this.httpContext.request('event-chains/', 'POST', data=data)
+    .then((body) => {
+      this.updateProjection(account);
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
     });
-
-    this.updateProjection(account);
   }
 
   public createIdentity(account: Account): any {
@@ -152,7 +164,7 @@ export class EventChainContext {
 
     let identity = this.chain.identities.filter(this.filterIdentitiesBySignKey);
     if (!identity) {
-      assert.fail(`${accountRef} is not an identity on the chain`);
+      fail(`${accountRef} is not an identity on the chain`);
     }
   }
 }

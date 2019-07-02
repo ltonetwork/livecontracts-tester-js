@@ -1,16 +1,19 @@
 import { Account, Event } from 'lto-api';
-import { strict as request } from 'request';
 import { Process } from './Process';
 import { EventChainContext } from './EventChainContext';
+import { HTTPContext } from './HTTPContext';
 const assert = require('assert').ok;
+const fail = require('assert').fail;
 
 export class ProcessContext {
   protected chainContext: EventChainContext;
+  protected httpContext: HTTPContext;
   protected basePath: string = __dirname;
   protected processes: Process[] = [];
 
-  constructor(chainContext: EventChainContext) {
-    this.chainContext = chainContext;
+  constructor(scope: any) {
+    this.chainContext = scope.eventChainContext;
+    this.httpContext = scope.httpContext;
   }
 
   /* Figure out how to do this in Nodejs */
@@ -27,27 +30,31 @@ export class ProcessContext {
     return this.processes[ref];
   }
 
-  public getProjection(process: Process, account: Account = null): any {
-    let projection = process.getProjection();
-    account = account ? account : this.chainContext.getCreator();
-    if (!projection) {
-      let headers = {
-        'Accept': 'application/json;view=complete'
-      }
-      let data = {
-        'account': account
-      }
-
-      request({headers: headers, uri: `processes/${process.id}`, body: data}, (error, resp, body) => {
-        if (error) {
-          throw new Error('Failed to get projection of process');
+  public getProjection(process: Process, account: Account = null): Promise<any> {
+    return new Promise(function(resolve, reject) {
+      let projection = process.getProjection();
+      account = account ? account : this.chainContext.getCreator();
+      if (!projection) {
+        let headers = {
+          'Accept': 'application/json;view=complete'
+        }
+        let data = {
+          'account': account
         }
 
-        process.setProjection(projection);
-      });
-    }
-
-    return projection;
+        this.httpContext.request(`processes/${process.id}/`, 'GET', headers, data)
+        .then((body) => {
+          process.setProjection(projection);
+          resolve(projection);
+        }, (e) => {
+          reject(e);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      }
+      resolve(projection);
+    }.bind(this));
   }
 
   protected addProcessToChain(process: Process): void {
@@ -117,38 +124,61 @@ export class ProcessContext {
 
   public checkActor(processRef: string, actorKey: string): void {
     let process = this.getProcess(processRef);
-    let projection = this.getProjection(process);
-    
-    assert(projection['actors'].hasOwnProperty(actorKey), "Actor not found");
+    this.getProjection(process)
+    .then((projection) => {
+      assert(projection['actors'].hasOwnProperty(actorKey), "Actor not found");
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   }
 
   public checkAsset(processRef: string, assetKey: string): void {
     let process = this.getProcess(processRef);
-    let projection = this.getProjection(process);
-    
-    assert(projection['assets'].hasOwnProperty(assetKey), "Asset not found");
+    this.getProjection(process)
+    .then((projection) => {
+      assert(projection['assets'].hasOwnProperty(assetKey), "Asset not found");
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   }
   
   public hasInHistory(processRef: string, title: string): void {
     let process = this.getProcess(processRef);
-    let projection = this.getProjection(process);
-    let found = false;
+    this.getProjection(process)
+    .then((projection) => {
+      let found = false;
     
-    for (let prev of projection['previous']) {
-      if (prev['title'] === 'title') {
-        found = true;
+      for (let prev of projection['previous']) {
+        if (prev['title'] === 'title') {
+          found = true;
+        }
       }
-    }
 
-    assert(found, "Step not found in history");
+      assert(found, "Step not found in history");
+    }, (e) => {
+      fail(e);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   }
 
   public checkState(processRef: string, state: string): void {
     let process = this.getProcess(processRef);
-    let projection = this.getProjection(process);
-
-    assert(projection.hasOwnProperty('current'), "No current step found");
-    assert(projection['current']['key'] === state, "Current state does not match de state requested");
+    this.getProjection(process)
+    .then((projection) => {
+      assert(projection !== null, "No projection found");
+      assert(projection.hasOwnProperty('current'), "No current step found");
+      assert(projection['current']['key'] === state, "Current state does not match de state requested");
+    }, (e) => {
+      fail(e);
+    });
   }
 
   public checkCompleted(processRef: string): void {

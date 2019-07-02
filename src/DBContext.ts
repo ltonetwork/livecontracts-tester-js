@@ -1,15 +1,39 @@
-const MongoClient = require('mongodb').MongoClient;
+import { HTTPContext } from './HTTPContext';
+import { MongoClient } from 'mongodb';
+const fail = require('assert').fail;
 
 export class DBContext {
-  protected static mongo: any;
-  protected static fixturePath: string;
+  protected mongo: MongoClient;
+  protected fixturePath: string;
+  protected httpContext: HTTPContext;
+  protected admin: any;
 
-  public static connect(scope: any): void {
-    let url = 'mongo://localhost';
-    this.mongo = new MongoClient(url);
+  constructor(scope: any) {
+    this.httpContext = scope.httpContext;
+    this.mongo = new MongoClient(this.httpContext.mongoUrl, { useNewUrlParser: true })
   }
 
-  public backupDatabase(scope: any): void {
+  public async connect() {
+    return this.mongo.connect(function(err, db) {
+      if (err) {
+        fail(err);
+      }
+    });
+  }
+
+  public close(): void {
+    this.mongo.close();
+  }
+
+  public async backupDatabase(scope: any) {
+    let dbList = this.admin.listDatabases(function(err, result) {
+      if (err) {
+        fail(err);
+      }
+      console.log(result);
+
+      return result;
+    }); 
 
   }
 }
