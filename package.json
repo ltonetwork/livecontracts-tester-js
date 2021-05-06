@@ -19,7 +19,7 @@
     "cucumber": "^5.1.0",
     "fs": "0.0.1-security",
     "js-yaml": "^3.13.1",
-    "json": "^9.0.6",
+    "json": "^10.0.0",
     "lto-api": "^0.5.11",
     "mongodb": "^3.2.7",
     "request": "^2.88.0",
